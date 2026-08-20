@@ -5,10 +5,10 @@
   "description": "ComputerCraft Lua distributed from GitHub, updatable in game with one command",
   "type": "module",
   "scripts": {
-    "manifest": "bun tools/build-manifest.ts",
-    "check": "bun tools/lint-lua.ts && bun tools/build-manifest.ts --check",
-    "sync": "bun tools/sync-world.ts",
-    "raw": "bun tools/check-raw.ts"
+    "manifest": "bun tools/manifest.ts",
+    "lint": "bun tools/lint.ts",
+    "sync": "bun tools/sync.ts",
+    "raw": "bun tools/raw.ts"
   },
   "devDependencies": {
     "luaparse": "^0.3.1"

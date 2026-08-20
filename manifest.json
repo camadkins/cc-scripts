@@ -4,32 +4,32 @@
     {
       "path": "ccs/installer.lua",
       "src": "installer.lua",
-      "sha1": "099ad6abdf52799457dba184d00088a6cb6d9a58",
-      "bytes": 7812
+      "sha1": "fe4883eeb17ea7c0b969ca4ce5ea5bfd437b0eee",
+      "bytes": 5445
     },
     {
       "path": "ccs/log.lua",
       "src": "src/ccs/log.lua",
-      "sha1": "638233773059c894086c10cd2487adea5012a656",
-      "bytes": 1357
+      "sha1": "992da3f746c5692f403513448a99c88b31a4a22f",
+      "bytes": 1067
     },
     {
       "path": "ccs/util.lua",
       "src": "src/ccs/util.lua",
-      "sha1": "bbae4bd2ca86f7e597f4122966fa418b733d878d",
-      "bytes": 1268
+      "sha1": "fa79cae48e27076678f2287b8d94519b83fb1d41",
+      "bytes": 949
     },
     {
       "path": "ccs/version.lua",
       "src": "src/ccs/version.lua",
-      "sha1": "59569fa1ea5129987dc093700667cafb8cf9dad6",
-      "bytes": 703
+      "sha1": "c60d7f05a3809df1fa3ff577ad8e09c062e7c2ea",
+      "bytes": 442
     },
     {
       "path": "programs/hello.lua",
       "src": "src/programs/hello.lua",
-      "sha1": "e51a05679248ff758d85667236b4aa03a71e7d57",
-      "bytes": 877
+      "sha1": "38f70af6129a7094d9dd29540d2605af2509430a",
+      "bytes": 584
     }
   ]
 }

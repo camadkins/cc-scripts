@@ -1,66 +1,40 @@
---- cc-scripts installer / updater.
---
--- Self-contained by contract: this file may never require anything it installs,
--- because on a fresh computer it is the only file present.
---
--- Bootstrap:
---   wget run https://raw.githubusercontent.com/camadkins/cc-scripts/main/installer.lua
--- Afterwards:
---   update
+-- cc-scripts installer. Must not require anything it installs.
 
-local OWNER  = "camadkins"
-local REPO   = "cc-scripts"
-local BRANCH = "main"
-
-local MANIFEST_REPO_PATH = "manifest.json"
-local MANIFEST_LOCAL     = "/ccs/manifest.json"
-local SHIM_PATH          = "/update.lua"
+local OWNER, REPO, BRANCH = "camadkins", "cc-scripts", "main"
+local MANIFEST = "/ccs/manifest.json"
+local SHIM = "/update.lua"
 
 local unjson = textutils.unserialiseJSON or textutils.unserializeJSON
+local bust = 0
 
-local cacheBustCounter = 0
-
-local function colour(c, text)
+local function say(colour, text)
   if term.isColour and term.isColour() then
     local prev = term.getTextColour()
-    term.setTextColour(c)
-    io.write(text)
+    term.setTextColour(colour)
+    print(text)
     term.setTextColour(prev)
   else
-    io.write(text)
+    print(text)
   end
 end
 
-local function info(text) print(text) end
-local function ok(text) colour(colours.lime, text) print("") end
-local function warn(text) colour(colours.yellow, text) print("") end
-local function fail(text) colour(colours.red, text) print("") end
+-- ?cb= defeats the ~5min raw.githubusercontent CDN cache, which otherwise makes
+-- a fresh push look like a no-op.
+local function fetch(path)
+  bust = bust + 1
+  local url = ("https://raw.githubusercontent.com/%s/%s/%s/%s?cb=%d.%d")
+    :format(OWNER, REPO, BRANCH, path, os.epoch("utc"), bust)
 
---- Build the raw.githubusercontent URL for a repo path.
--- The cb= parameter defeats the ~5 minute GitHub CDN cache, which otherwise
--- serves the pre-push content to anyone updating immediately after a release.
-local function rawUrl(repoPath)
-  cacheBustCounter = cacheBustCounter + 1
-  return ("https://raw.githubusercontent.com/%s/%s/%s/%s?cb=%d.%d")
-    :format(OWNER, REPO, BRANCH, repoPath, os.epoch("utc"), cacheBustCounter)
-end
-
---- Fetch one repo path. Returns content, or nil plus a message.
-local function fetch(repoPath)
-  local url = rawUrl(repoPath)
   local handle, err = http.get(url, { ["Cache-Control"] = "no-cache" })
-  if not handle then
-    return nil, ("%s: %s"):format(repoPath, tostring(err))
-  end
+  if not handle then return nil, path .. ": " .. tostring(err) end
+
   local body = handle.readAll()
   handle.close()
-  if not body or #body == 0 then
-    return nil, ("%s: empty response"):format(repoPath)
-  end
+  if not body or #body == 0 then return nil, path .. ": empty" end
   return body
 end
 
-local function readFile(path)
+local function read(path)
   if not fs.exists(path) then return nil end
   local handle = fs.open(path, "r")
   if not handle then return nil end
@@ -69,179 +43,138 @@ local function readFile(path)
   return body
 end
 
-local function writeFile(path, content)
+local function write(path, body)
   local dir = fs.getDir(path)
   if dir ~= "" and not fs.exists(dir) then fs.makeDir(dir) end
-  local handle, err = fs.open(path, "w")
-  if not handle then error(("cannot write %s: %s"):format(path, tostring(err))) end
-  handle.write(content)
+  local handle = fs.open(path, "w")
+  if not handle then error("cannot write " .. path) end
+  handle.write(body)
   handle.close()
 end
 
---- Manifest entries are keyed by install path; index them for comparison.
-local function indexByInstallPath(manifest)
-  local byPath = {}
+local function byPath(manifest)
+  local out = {}
   if manifest and manifest.files then
-    for _, entry in ipairs(manifest.files) do byPath[entry.path] = entry end
+    for _, file in ipairs(manifest.files) do out[file.path] = file end
   end
-  return byPath
+  return out
 end
 
-local function loadInstalledManifest()
-  local body = readFile(MANIFEST_LOCAL)
-  if not body then return nil end
-  local parsed = unjson(body)
-  return parsed
-end
+local function diff(remote, installed)
+  local new, old = byPath(remote), byPath(installed)
+  local add, up, same, gone = {}, {}, 0, {}
 
---- Classify every install path as added / updated / unchanged / removed.
-local function diffManifests(remote, installed)
-  local remoteByPath    = indexByInstallPath(remote)
-  local installedByPath = indexByInstallPath(installed)
-
-  local added, updated, unchanged, removed = {}, {}, {}, {}
-
-  for path, entry in pairs(remoteByPath) do
-    local prev = installedByPath[path]
-    if not prev then
-      added[#added + 1] = entry
-    elseif prev.sha1 ~= entry.sha1 then
-      updated[#updated + 1] = entry
-    else
-      unchanged[#unchanged + 1] = entry
-    end
+  for path, file in pairs(new) do
+    local prev = old[path]
+    if not prev then add[#add + 1] = file
+    elseif prev.sha1 ~= file.sha1 then up[#up + 1] = file
+    else same = same + 1 end
+  end
+  for path in pairs(old) do
+    if not new[path] then gone[#gone + 1] = path end
   end
 
-  for path in pairs(installedByPath) do
-    if not remoteByPath[path] then removed[#removed + 1] = path end
-  end
-
-  table.sort(added,   function(a, b) return a.path < b.path end)
-  table.sort(updated, function(a, b) return a.path < b.path end)
-  table.sort(removed)
-
-  return added, updated, unchanged, removed
+  table.sort(add, function(a, b) return a.path < b.path end)
+  table.sort(up, function(a, b) return a.path < b.path end)
+  table.sort(gone)
+  return add, up, same, gone
 end
 
-local function writeShim()
-  writeFile(SHIM_PATH, table.concat({
-    "-- generated by cc-scripts installer; edits are overwritten on update",
-    'local args = { ... }',
-    'shell.run("/ccs/installer.lua", "update", table.unpack(args))',
-  }, "\n") .. "\n")
-end
-
---- Fetch every changed file into memory FIRST, then write.
--- Nothing on disk is touched until the whole set has been downloaded and
--- verified non-empty, so a mid-update HTTP failure leaves the previous
--- version fully intact rather than a mix of two releases.
-local function apply(remote, added, updated, removed, dryRun)
-  local work = {}
-  for _, entry in ipairs(added)   do work[#work + 1] = entry end
-  for _, entry in ipairs(updated) do work[#work + 1] = entry end
-
-  if #work == 0 and #removed == 0 then
-    ok("Already up to date (version " .. tostring(remote.version) .. ").")
+local function apply(remote, add, up, gone, dry)
+  if #add == 0 and #up == 0 and #gone == 0 then
+    say(colours.lime, "up to date (" .. tostring(remote.version) .. ")")
     return true
   end
 
-  for _, entry in ipairs(added)   do info("  + " .. entry.path) end
-  for _, entry in ipairs(updated) do info("  ~ " .. entry.path) end
-  for _, path  in ipairs(removed) do info("  - " .. path) end
+  for _, file in ipairs(add) do print("  + " .. file.path) end
+  for _, file in ipairs(up) do print("  ~ " .. file.path) end
+  for _, path in ipairs(gone) do print("  - " .. path) end
+  if dry then return true end
 
-  if dryRun then
-    info(("%d to add, %d to update, %d to remove."):format(#added, #updated, #removed))
-    return true
-  end
-
+  -- Download everything before writing anything, so a failed fetch leaves the
+  -- old version intact instead of half a release.
   local staged = {}
-  for _, entry in ipairs(work) do
-    local body, err = fetch(entry.src)
+  for _, file in ipairs(add) do staged[#staged + 1] = file end
+  for _, file in ipairs(up) do staged[#staged + 1] = file end
+
+  for i, file in ipairs(staged) do
+    local body, err = fetch(file.src)
     if not body then
-      fail("Download failed, nothing written: " .. tostring(err))
+      say(colours.red, "failed, nothing written: " .. tostring(err))
       return false
     end
-    staged[#staged + 1] = { path = entry.path, body = body }
+    staged[i] = { path = file.path, body = body }
   end
 
-  for _, item in ipairs(staged) do writeFile(item.path, item.body) end
-  for _, path in ipairs(removed) do
+  for _, file in ipairs(staged) do write(file.path, file.body) end
+  for _, path in ipairs(gone) do
     if fs.exists(path) then fs.delete(path) end
   end
 
-  writeFile(MANIFEST_LOCAL, textutils.serialiseJSON(remote))
-  writeShim()
+  write(MANIFEST, textutils.serialiseJSON(remote))
+  write(SHIM, 'local args = { ... }\nshell.run("/ccs/installer.lua", "update", table.unpack(args))\n')
 
-  ok(("Done. %d added, %d updated, %d removed -> version %s")
-    :format(#added, #updated, #removed, tostring(remote.version)))
+  say(colours.lime, ("done: %d added, %d updated, %d removed -> %s")
+    :format(#add, #up, #gone, tostring(remote.version)))
   return true
 end
 
-local function run(mode)
-  info(("cc-scripts :: %s/%s@%s"):format(OWNER, REPO, BRANCH))
-
-  local body, err = fetch(MANIFEST_REPO_PATH)
+local function run(dry)
+  local body, err = fetch("manifest.json")
   if not body then
-    fail("Cannot reach the manifest: " .. tostring(err))
-    fail("Check that the computer has HTTP enabled and the branch exists.")
+    say(colours.red, "cannot reach manifest: " .. tostring(err))
     return false
   end
 
   local remote = unjson(body)
   if type(remote) ~= "table" or type(remote.files) ~= "table" then
-    fail("Manifest is malformed.")
+    say(colours.red, "bad manifest")
     return false
   end
 
-  local installed = loadInstalledManifest()
-  if mode == "install" and installed then
-    warn("Already installed; running as an update.")
+  local installed = unjson(read(MANIFEST) or "null")
+  local add, up, same, gone = diff(remote, installed)
+  if dry then
+    print(("%s, %d files, %d unchanged"):format(tostring(remote.version), #remote.files, same))
   end
-
-  local added, updated, unchanged, removed = diffManifests(remote, installed)
-
-  if mode == "check" then
-    info(("Remote version %s, %d files (%d unchanged)."):format(
-      tostring(remote.version), #remote.files, #unchanged))
-    return apply(remote, added, updated, removed, true)
-  end
-
-  return apply(remote, added, updated, removed, false)
+  return apply(remote, add, up, gone, dry)
 end
 
-local function uninstall(remote)
-  local installed = loadInstalledManifest()
+local function uninstall()
+  local installed = unjson(read(MANIFEST) or "null")
   if not installed then
-    warn("Nothing installed.")
-    return true
+    print("nothing installed")
+    return
   end
-  for _, entry in ipairs(installed.files) do
-    if fs.exists(entry.path) then fs.delete(entry.path) end
+  for _, file in ipairs(installed.files) do
+    if fs.exists(file.path) then fs.delete(file.path) end
   end
-  if fs.exists(SHIM_PATH) then fs.delete(SHIM_PATH) end
-  if fs.exists(MANIFEST_LOCAL) then fs.delete(MANIFEST_LOCAL) end
-  ok("Uninstalled.")
-  return true
+  fs.delete(SHIM)
+  fs.delete(MANIFEST)
+  say(colours.lime, "uninstalled")
 end
 
 local args = { ... }
 local mode = args[1] or "install"
 
-for index = 2, #args do
-  local flag, value = args[index]:match("^%-%-(%w+)=(.+)$")
+for i = 2, #args do
+  local flag, value = args[i]:match("^%-%-(%w+)=(.+)$")
   if flag == "branch" then BRANCH = value
   elseif flag == "owner" then OWNER = value
   elseif flag == "repo" then REPO = value end
 end
 
-if mode == "install" or mode == "update" or mode == "check" then
-  local success = run(mode)
-  if not success then error("cc-scripts: " .. mode .. " failed", 0) end
+print(("cc-scripts :: %s/%s@%s"):format(OWNER, REPO, BRANCH))
+
+if mode == "install" or mode == "update" then
+  if not run(false) then error("cc-scripts: " .. mode .. " failed", 0) end
+elseif mode == "check" then
+  run(true)
 elseif mode == "uninstall" then
   uninstall()
 elseif mode == "version" then
-  local installed = loadInstalledManifest()
-  info(installed and tostring(installed.version) or "not installed")
+  local installed = unjson(read(MANIFEST) or "null")
+  print(installed and tostring(installed.version) or "not installed")
 else
-  info("usage: installer.lua [install|update|check|uninstall|version] [--branch=NAME]")
+  print("usage: installer.lua [install|update|check|uninstall|version] [--branch=NAME]")
 end
