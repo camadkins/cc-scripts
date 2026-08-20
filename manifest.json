@@ -1,0 +1,35 @@
+{
+  "version": "0.1.0",
+  "files": [
+    {
+      "path": "ccs/installer.lua",
+      "src": "installer.lua",
+      "sha1": "099ad6abdf52799457dba184d00088a6cb6d9a58",
+      "bytes": 7812
+    },
+    {
+      "path": "ccs/log.lua",
+      "src": "src/ccs/log.lua",
+      "sha1": "638233773059c894086c10cd2487adea5012a656",
+      "bytes": 1357
+    },
+    {
+      "path": "ccs/util.lua",
+      "src": "src/ccs/util.lua",
+      "sha1": "bbae4bd2ca86f7e597f4122966fa418b733d878d",
+      "bytes": 1268
+    },
+    {
+      "path": "ccs/version.lua",
+      "src": "src/ccs/version.lua",
+      "sha1": "59569fa1ea5129987dc093700667cafb8cf9dad6",
+      "bytes": 703
+    },
+    {
+      "path": "programs/hello.lua",
+      "src": "src/programs/hello.lua",
+      "sha1": "e51a05679248ff758d85667236b4aa03a71e7d57",
+      "bytes": 877
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+node_modules/
+.ccsync.json
+*.log
+
+# Development process stays local. Only the product ships.
+ISA.md
+*.isa.md
+CLAUDE.md
+.claude/
+MEMORY/
+NOTES.md

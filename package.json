@@ -1,0 +1,16 @@
+{
+  "name": "cc-scripts",
+  "version": "0.1.0",
+  "private": true,
+  "description": "ComputerCraft Lua distributed from GitHub, updatable in game with one command",
+  "type": "module",
+  "scripts": {
+    "manifest": "bun tools/build-manifest.ts",
+    "check": "bun tools/lint-lua.ts && bun tools/build-manifest.ts --check",
+    "sync": "bun tools/sync-world.ts",
+    "raw": "bun tools/check-raw.ts"
+  },
+  "devDependencies": {
+    "luaparse": "^0.3.1"
+  }
+}
