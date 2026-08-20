@@ -36,6 +36,12 @@
       "src": "src/programs/inspect.lua",
       "sha1": "4b4cfb2824311fd8c805aaaa5c2f09940d5c5e2b",
       "bytes": 1502
+    },
+    {
+      "path": "probe.lua",
+      "src": "src/programs/probe.lua",
+      "sha1": "eeb00d396b77e2edfb35551c7a1aaee7fe812673",
+      "bytes": 1758
     }
   ]
 }

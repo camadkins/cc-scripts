@@ -27,6 +27,7 @@ wget run https://raw.githubusercontent.com/camadkins/cc-scripts/main/installer.l
 discover                            list peripherals
 discover /out.json                  ... and dump JSON
 inspect <peripheral>                types and methods for one
+probe <peripheral> <method>         call one named method, show what returns
 
 update                              pull latest
 /ccs/installer.lua check            show what would change
@@ -67,6 +68,9 @@ bun tools/raw.ts         check every url is live
 Rebuild the manifest before pushing or `update` breaks for everyone. `bun tools/manifest.ts --check` catches it.
 
 `sync.ts` copies, never deletes.
+
+`discover` and `inspect` never call a peripheral method. `probe` calls exactly the one
+you name and nothing else.
 
 ## License
 
