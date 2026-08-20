@@ -1,10 +1,17 @@
 # cc-scripts
 
-ComputerCraft Lua, pulled from GitHub.
+Overnet is a modular monitoring, control, telemetry, and HMI framework for CC:Tweaked in
+modded Minecraft. You install the platform, then only the integrations for the mods you
+actually run.
 
-`src/ccs/` is the engine, mod-agnostic, useful in any world. `src/overnet/` is my ATM10
-application built on it: mod drivers, HMI, nodes. Anything in overnet that turns out to
-be general moves down into the engine.
+CCS is the infrastructure underneath it: installer, updater, logging, generic helpers.
+Overnet may use CCS. CCS never depends on Overnet.
+
+ATM10 is the current test environment, not the target. Overnet should work in any pack,
+including worlds with no Mekanism at all.
+
+Nothing under `src/overnet/` exists yet. Devices, capabilities, and drivers get designed
+from real peripheral data, not ahead of it.
 
 ## Install
 
@@ -18,7 +25,7 @@ wget run https://raw.githubusercontent.com/camadkins/cc-scripts/main/installer.l
 
 ```
 discover                            list peripherals
-discover out.json                   ... and dump JSON
+discover /out.json                  ... and dump JSON
 inspect <peripheral>                types and methods for one
 
 update                              pull latest
@@ -32,9 +39,9 @@ update                              pull latest
 
 ```
 installer.lua      ->  /ccs/installer.lua
-src/ccs/*.lua      ->  /ccs/*.lua          engine
-src/overnet/**     ->  /overnet/**         atm10 app
-src/programs/*.lua ->  /programs/*.lua     runnable
+src/ccs/*.lua      ->  /ccs/*.lua          infrastructure
+src/overnet/**     ->  /overnet/**         the platform (not built yet)
+src/programs/*.lua ->  /*.lua              runnable, on the shell path
 manifest.json      ->  /ccs/manifest.json  generated file list
 ```
 

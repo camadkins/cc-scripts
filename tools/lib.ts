@@ -34,9 +34,13 @@ function entry(src: string, path: string): File {
 // the tree and the manifest actually disagree.
 export function build(): Manifest {
   const pkg = JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8"));
+  // programs install to root so you can type `discover`, not `programs/discover`
   const files = walk(join(ROOT, "src")).map((full) => {
     const src = relative(ROOT, full).split(sep).join("/");
-    return entry(src, src.replace(/^src\//, ""));
+    const path = src.startsWith("src/programs/")
+      ? src.slice("src/programs/".length)
+      : src.slice("src/".length);
+    return entry(src, path);
   });
 
   files.push(entry("installer.lua", "ccs/installer.lua"));

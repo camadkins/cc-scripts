@@ -1,5 +1,5 @@
 {
-  "version": "0.1.0",
+  "version": "0.2.0",
   "files": [
     {
       "path": "ccs/installer.lua",
@@ -26,16 +26,16 @@
       "bytes": 442
     },
     {
-      "path": "programs/discover.lua",
+      "path": "discover.lua",
       "src": "src/programs/discover.lua",
-      "sha1": "600d8a65ec37587f85b008b6d22a447b318e8040",
-      "bytes": 1373
+      "sha1": "4b0a3653c23156b1e3e3c2ed9c870ea86ae71408",
+      "bytes": 2866
     },
     {
-      "path": "programs/inspect.lua",
+      "path": "inspect.lua",
       "src": "src/programs/inspect.lua",
-      "sha1": "5a609ce7c5f1c306587525cbfe6ecc99964a9e70",
-      "bytes": 570
+      "sha1": "d0ab2b520dc14e80b61f638afbcb774c7ac93a92",
+      "bytes": 1517
     }
   ]
 }

@@ -1,4 +1,4 @@
--- inspect <peripheral>  -- types and methods for one peripheral. Never calls them.
+-- inspect <peripheral>  -- read-only. Never calls a peripheral method.
 local name = ({ ... })[1]
 
 if not name then
@@ -8,13 +8,44 @@ end
 
 if not peripheral.isPresent(name) then
   print("no peripheral named " .. name)
-  print("attached: " .. table.concat(peripheral.getNames(), ", "))
+  local names = peripheral.getNames()
+  table.sort(names)
+  print("attached: " .. (#names > 0 and table.concat(names, ", ") or "none"))
   return
 end
 
-print(name .. "  [" .. tostring(peripheral.getType(name)) .. "]")
+-- getType returns varargs; keep all of them
+local got = { pcall(peripheral.getType, name) }
+local SIDES = { top = true, bottom = true, left = true, right = true, front = true, back = true }
+local lines = { name .. "  (" .. (SIDES[name] and "direct" or "network") .. ")", "", "Types:" }
 
-local methods = peripheral.getMethods(name) or {}
-table.sort(methods)
-for _, method in ipairs(methods) do print("  " .. method) end
-print(#methods .. " methods")
+if not got[1] then
+  lines[#lines + 1] = "  !! " .. tostring(got[2])
+elseif #got < 2 then
+  lines[#lines + 1] = "  (none reported)"
+else
+  for i = 2, #got do
+    if got[i] ~= nil then lines[#lines + 1] = "  " .. tostring(got[i]) end
+  end
+end
+
+lines[#lines + 1] = ""
+lines[#lines + 1] = "Methods:"
+
+local ok, list = pcall(peripheral.getMethods, name)
+if not ok then
+  lines[#lines + 1] = "  !! " .. tostring(list)
+else
+  local methods = {}
+  for _, method in ipairs(list or {}) do methods[#methods + 1] = tostring(method) end
+  table.sort(methods)
+  if #methods == 0 then
+    lines[#lines + 1] = "  (none reported)"
+  else
+    for _, method in ipairs(methods) do lines[#lines + 1] = "  " .. method end
+  end
+  lines[#lines + 1] = ""
+  lines[#lines + 1] = #methods .. " methods"
+end
+
+textutils.pagedPrint(table.concat(lines, "\n"))

@@ -1,44 +1,97 @@
--- Enumerate every attached peripheral. Metadata only, never calls a method.
---   discover              print to terminal
---   discover out.json     also write JSON
+-- Read-only peripheral discovery. Never calls a peripheral method.
+--   discover              print
+--   discover out.json     print and dump JSON
 package.path = "/?.lua;/?/init.lua;" .. package.path
 
 local util = require("ccs.util")
+local out = ({ ... })[1]
 
-local out = tostring(({ ... })[1])
+-- getType returns varargs, not one string. A chest is both minecraft:chest and
+-- inventory, and the generic traits are the useful half.
+local function typesOf(name)
+  local got = { pcall(peripheral.getType, name) }
+  if not got[1] then return nil, tostring(got[2]) end
 
-local function scan(name)
-  local ok, types = pcall(peripheral.getType, name)
-  if not ok then return { name = name, error = tostring(types) } end
+  local types = {}
+  for i = 2, #got do
+    if got[i] ~= nil then types[#types + 1] = tostring(got[i]) end
+  end
+  return types
+end
+
+local function methodsOf(name)
+  local ok, list = pcall(peripheral.getMethods, name)
+  if not ok then return nil, tostring(list) end
 
   local methods = {}
-  local gotMethods, list = pcall(peripheral.getMethods, name)
-  if gotMethods and list then
-    for _, method in ipairs(list) do methods[#methods + 1] = method end
-    table.sort(methods)
-  end
-
-  return { name = name, types = { types }, methods = methods }
+  for _, method in ipairs(list or {}) do methods[#methods + 1] = tostring(method) end
+  table.sort(methods)
+  return methods
 end
+
+local SIDES = { top = true, bottom = true, left = true, right = true, front = true, back = true }
+
+local function scan(name)
+  local types, typeErr = typesOf(name)
+  local methods, methodErr = methodsOf(name)
+  return {
+    name = name,
+    -- a side name means the block is touching the computer; anything else came
+    -- over a wired network. The same block can show up as both.
+    attachment = SIDES[name] and "direct" or "network",
+    types = types or {},
+    methods = methods or {},
+    errors = { types = typeErr, methods = methodErr },
+  }
+end
+
+local names = peripheral.getNames()
+table.sort(names)
 
 local found = {}
-for _, name in ipairs(peripheral.getNames()) do
-  found[#found + 1] = scan(name)
-end
-table.sort(found, function(a, b) return a.name < b.name end)
+for _, name in ipairs(names) do found[#found + 1] = scan(name) end
+
+local lines = {
+  "OVERNET DISCOVERY",
+  "",
+  "Computer: " .. os.getComputerID(),
+  "Host: " .. tostring(_HOST),
+  "",
+}
 
 for _, device in ipairs(found) do
-  if device.error then
-    print(device.name .. "  !! " .. device.error)
+  lines[#lines + 1] = device.name .. "  (" .. device.attachment .. ")"
+  lines[#lines + 1] = ""
+
+  lines[#lines + 1] = "Types:"
+  if #device.types == 0 then
+    lines[#lines + 1] = "  (none reported)"
   else
-    print(("%s  [%s]  %d methods"):format(device.name, table.concat(device.types, ","), #device.methods))
-    for _, method in ipairs(device.methods) do print("    " .. method) end
+    for _, kind in ipairs(device.types) do lines[#lines + 1] = "  " .. kind end
   end
+  lines[#lines + 1] = ""
+
+  lines[#lines + 1] = "Methods:"
+  if #device.methods == 0 then
+    lines[#lines + 1] = "  (none reported)"
+  else
+    for _, method in ipairs(device.methods) do lines[#lines + 1] = "  " .. method end
+  end
+
+  if device.errors.types then lines[#lines + 1] = "  !! types: " .. device.errors.types end
+  if device.errors.methods then lines[#lines + 1] = "  !! methods: " .. device.errors.methods end
+  lines[#lines + 1] = ""
 end
 
-print(#found .. " peripherals")
+lines[#lines + 1] = #found .. " peripherals"
+textutils.pagedPrint(table.concat(lines, "\n"))
 
-if out ~= "nil" then
-  util.write(out, textutils.serialiseJSON({ computer = os.getComputerID(), peripherals = found }))
+if out then
+  util.write(out, textutils.serialiseJSON({
+    computer = os.getComputerID(),
+    host = tostring(_HOST),
+    time = os.date("%Y-%m-%dT%H:%M:%S"),
+    peripherals = found,
+  }))
   print("wrote " .. out)
 end
