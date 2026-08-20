@@ -2,6 +2,10 @@
 
 ComputerCraft Lua, pulled from GitHub.
 
+`src/ccs/` is the engine, mod-agnostic, useful in any world. `src/overnet/` is my ATM10
+application built on it: mod drivers, HMI, nodes. Anything in overnet that turns out to
+be general moves down into the engine.
+
 ## Install
 
 On any computer:
@@ -13,6 +17,10 @@ wget run https://raw.githubusercontent.com/camadkins/cc-scripts/main/installer.l
 ## Use
 
 ```
+discover                            list peripherals
+discover out.json                   ... and dump JSON
+inspect <peripheral>                types and methods for one
+
 update                              pull latest
 /ccs/installer.lua check            show what would change
 /ccs/installer.lua version          installed version
@@ -24,7 +32,8 @@ update                              pull latest
 
 ```
 installer.lua      ->  /ccs/installer.lua
-src/ccs/*.lua      ->  /ccs/*.lua          shared lib
+src/ccs/*.lua      ->  /ccs/*.lua          engine
+src/overnet/**     ->  /overnet/**         atm10 app
 src/programs/*.lua ->  /programs/*.lua     runnable
 manifest.json      ->  /ccs/manifest.json  generated file list
 ```

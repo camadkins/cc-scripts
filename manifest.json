@@ -26,10 +26,16 @@
       "bytes": 442
     },
     {
-      "path": "programs/hello.lua",
-      "src": "src/programs/hello.lua",
-      "sha1": "38f70af6129a7094d9dd29540d2605af2509430a",
-      "bytes": 584
+      "path": "programs/discover.lua",
+      "src": "src/programs/discover.lua",
+      "sha1": "600d8a65ec37587f85b008b6d22a447b318e8040",
+      "bytes": 1373
+    },
+    {
+      "path": "programs/inspect.lua",
+      "src": "src/programs/inspect.lua",
+      "sha1": "5a609ce7c5f1c306587525cbfe6ecc99964a9e70",
+      "bytes": 570
     }
   ]
 }
