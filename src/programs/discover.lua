@@ -84,9 +84,15 @@ for _, device in ipairs(found) do
 end
 
 lines[#lines + 1] = #found .. " peripherals"
-textutils.pagedPrint(table.concat(lines, "\n"))
 
 if out then
+  -- dumping to a file: one line per device, the detail is in the file
+  for _, device in ipairs(found) do
+    print(("%s (%s)  [%s]  %d methods"):format(
+      device.name, device.attachment, table.concat(device.types, ", "), #device.methods))
+  end
+  print(#found .. " peripherals")
+
   util.write(out, textutils.serialiseJSON({
     computer = os.getComputerID(),
     host = tostring(_HOST),
@@ -94,4 +100,6 @@ if out then
     peripherals = found,
   }))
   print("wrote " .. out)
+else
+  print(table.concat(lines, "\n"))
 end

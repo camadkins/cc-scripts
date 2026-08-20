@@ -48,4 +48,4 @@ else
   lines[#lines + 1] = #methods .. " methods"
 end
 
-textutils.pagedPrint(table.concat(lines, "\n"))
+print(table.concat(lines, "\n"))

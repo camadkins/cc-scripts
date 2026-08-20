@@ -28,14 +28,14 @@
     {
       "path": "discover.lua",
       "src": "src/programs/discover.lua",
-      "sha1": "4b0a3653c23156b1e3e3c2ed9c870ea86ae71408",
-      "bytes": 2866
+      "sha1": "0c975328bedde05022aff7719e4d44d794a0fa81",
+      "bytes": 3144
     },
     {
       "path": "inspect.lua",
       "src": "src/programs/inspect.lua",
-      "sha1": "d0ab2b520dc14e80b61f638afbcb774c7ac93a92",
-      "bytes": 1517
+      "sha1": "4b4cfb2824311fd8c805aaaa5c2f09940d5c5e2b",
+      "bytes": 1502
     }
   ]
 }
