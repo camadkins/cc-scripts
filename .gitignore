@@ -4,6 +4,7 @@ node_modules/
 
 # Development process stays local. Only the product ships.
 ISA.md
+ROADMAP.md
 *.isa.md
 CLAUDE.md
 .claude/

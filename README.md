@@ -43,6 +43,7 @@ installer.lua      ->  /ccs/installer.lua
 src/ccs/*.lua      ->  /ccs/*.lua          infrastructure
 src/overnet/**     ->  /overnet/**         the platform (not built yet)
 src/programs/*.lua ->  /*.lua              runnable, on the shell path
+src/startup/*.lua  ->  /startup/*.lua      runs at boot
 manifest.json      ->  /ccs/manifest.json  generated file list
 ```
 
@@ -68,6 +69,10 @@ bun tools/raw.ts         check every url is live
 Rebuild the manifest before pushing or `update` breaks for everyone. `bun tools/manifest.ts --check` catches it.
 
 `sync.ts` copies, never deletes.
+
+`inspect` and `probe` tab-complete peripheral names, and `probe` completes method names
+once the peripheral is typed. That is registered by `/startup/cc-scripts.lua`, which sits
+in the startup directory so it never clobbers your own `startup.lua`.
 
 `discover` and `inspect` never call a peripheral method. `probe` calls exactly the one
 you name and nothing else.

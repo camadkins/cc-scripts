@@ -42,6 +42,12 @@
       "src": "src/programs/probe.lua",
       "sha1": "eeb00d396b77e2edfb35551c7a1aaee7fe812673",
       "bytes": 1758
+    },
+    {
+      "path": "startup/cc-scripts.lua",
+      "src": "src/startup/cc-scripts.lua",
+      "sha1": "00e9b75dfecd4222ec4248d1475c3b8de28a8f56",
+      "bytes": 1115
     }
   ]
 }
