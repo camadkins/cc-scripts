@@ -5,7 +5,9 @@ local MANIFEST = "/ccs/manifest.json"
 local SHIM = "/update.lua"
 
 local unjson = textutils.unserialiseJSON or textutils.unserializeJSON
-local bust = 0
+
+-- Resolved at startup: a commit sha, or the branch name if the API is unreachable.
+local REF = nil
 
 local function say(colour, text)
   if term.isColour and term.isColour() then
@@ -18,14 +20,26 @@ local function say(colour, text)
   end
 end
 
--- ?cb= defeats the ~5min raw.githubusercontent CDN cache, which otherwise makes
--- a fresh push look like a no-op.
-local function fetch(path)
-  bust = bust + 1
-  local url = ("https://raw.githubusercontent.com/%s/%s/%s/%s?cb=%d.%d")
-    :format(OWNER, REPO, BRANCH, path, os.epoch("utc"), bust)
+-- raw.githubusercontent caches a branch path for ~5 minutes and ignores both a
+-- cache-busting query string and a no-cache header. A commit sha is a different
+-- URL every push, so it is never stale. One API call buys that.
+local function resolveRef()
+  local url = ("https://api.github.com/repos/%s/%s/commits/%s"):format(OWNER, REPO, BRANCH)
+  local handle = http.get(url, { Accept = "application/vnd.github.sha" })
+  if not handle then return BRANCH, false end
 
-  local handle, err = http.get(url, { ["Cache-Control"] = "no-cache" })
+  local sha = handle.readAll()
+  handle.close()
+  if sha then sha = sha:gsub("%s", "") end
+  if not sha or #sha ~= 40 or sha:match("%X") then return BRANCH, false end
+  return sha, true
+end
+
+local function fetch(path)
+  local url = ("https://raw.githubusercontent.com/%s/%s/%s/%s")
+    :format(OWNER, REPO, REF, path)
+
+  local handle, err = http.get(url)
   if not handle then return nil, path .. ": " .. tostring(err) end
 
   local body = handle.readAll()
@@ -165,6 +179,13 @@ for i = 2, #args do
 end
 
 print(("cc-scripts :: %s/%s@%s"):format(OWNER, REPO, BRANCH))
+
+local pinned
+REF, pinned = resolveRef()
+if not pinned then
+  say(colours.yellow, "warning: could not reach the GitHub API")
+  say(colours.yellow, "falling back to the branch; a recent push may take ~5min to show")
+end
 
 if mode == "install" or mode == "update" then
   if not run(false) then error("cc-scripts: " .. mode .. " failed", 0) end

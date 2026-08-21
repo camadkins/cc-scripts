@@ -72,6 +72,12 @@ Rebuild the manifest before pushing or `update` breaks for everyone. `bun tools/
 `discover` and `inspect` never call a peripheral method. `probe` calls exactly the one
 you name and nothing else.
 
+The installer resolves `main` to a commit sha through the GitHub API, then fetches every
+file at that sha. Branch paths on raw.githubusercontent serve stale for about five
+minutes and ignore both a cache-busting query string and a no-cache header; a sha is a
+different URL every push. Costs one API call per update, against a 60/hour anonymous
+limit. If the API is unreachable it falls back to the branch and says so.
+
 ## License
 
 MIT

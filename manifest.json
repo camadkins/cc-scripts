@@ -4,8 +4,8 @@
     {
       "path": "ccs/installer.lua",
       "src": "installer.lua",
-      "sha1": "fe4883eeb17ea7c0b969ca4ce5ea5bfd437b0eee",
-      "bytes": 5445
+      "sha1": "7f9d291a23d44c8b6060527cf2693086ab00aa2e",
+      "bytes": 6203
     },
     {
       "path": "ccs/log.lua",
