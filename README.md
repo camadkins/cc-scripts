@@ -28,6 +28,7 @@ discover                            list peripherals
 discover /out.json                  ... and dump JSON
 inspect <peripheral>                types and methods for one
 probe <peripheral> <method>         call one named method, show what returns
+probe <p> <m> --out /f.json         ... and write the result to a file
 
 update                              pull latest
 /ccs/installer.lua check            show what would change
