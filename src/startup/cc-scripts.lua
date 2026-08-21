@@ -28,6 +28,10 @@ shell.setCompletionFunction("inspect.lua", function(_, index, argument)
   if index == 1 then return peripherals(argument) end
 end)
 
+shell.setCompletionFunction("stock.lua", function(_, index, argument)
+  if index == 1 then return peripherals(argument) end
+end)
+
 -- previous[1] is the program name, so the peripheral is previous[2]
 shell.setCompletionFunction("probe.lua", function(_, index, argument, previous)
   if index == 1 then return peripherals(argument) end

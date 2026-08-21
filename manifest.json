@@ -38,16 +38,28 @@
       "bytes": 1502
     },
     {
+      "path": "overnet/inventory.lua",
+      "src": "src/overnet/inventory.lua",
+      "sha1": "cd158832dd079abbbe97090dc624c894fa6aeabf",
+      "bytes": 2271
+    },
+    {
       "path": "probe.lua",
       "src": "src/programs/probe.lua",
-      "sha1": "a15166f26166d6bc0869805eaa8785cf7751af6e",
-      "bytes": 3080
+      "sha1": "4eb0ec460f4d845946ddb5a9d0a34bf4a36640e8",
+      "bytes": 3417
     },
     {
       "path": "startup/cc-scripts.lua",
       "src": "src/startup/cc-scripts.lua",
-      "sha1": "00e9b75dfecd4222ec4248d1475c3b8de28a8f56",
-      "bytes": 1115
+      "sha1": "06f049e85d5a4b6cd90a195aa9c2737eae1d74aa",
+      "bytes": 1245
+    },
+    {
+      "path": "stock.lua",
+      "src": "src/programs/stock.lua",
+      "sha1": "38659a9bf6648c436c29d213541daf0170120cfb",
+      "bytes": 2228
     }
   ]
 }

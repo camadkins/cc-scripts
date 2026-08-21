@@ -10,24 +10,29 @@ local util = require("ccs.util")
 local raw = { ... }
 local args, out = {}, nil
 
+local function usage(problem)
+  if problem then print(problem) end
+  print("usage: probe <peripheral> <method> [args...] [--out FILE]")
+end
+
 local skip = false
 for i, value in ipairs(raw) do
   if skip then
     skip = false
   elseif value == "--out" then
     out = raw[i + 1]
+    if not out or out:sub(1, 1) == "-" then return usage("--out needs a filename") end
     skip = true
   else
+    -- a glued "1--out" used to sail through and surface as a peripheral error
+    if value:find("--", 1, true) then return usage("looks like a glued flag: " .. value) end
     args[#args + 1] = value
   end
 end
 
 local name, method = args[1], args[2]
 
-if not name or not method then
-  print("usage: probe <peripheral> <method> [args...] [--out FILE]")
-  return
-end
+if not name or not method then return usage() end
 
 if not peripheral.isPresent(name) then
   print("no peripheral named " .. name)
